@@ -46,6 +46,13 @@ export default async function LocationPage({
   const page = locationPages.find((l) => l.slug === locationSlug);
   if (!page) notFound();
 
+  let settings = null;
+  try {
+    settings = await getSiteSettings();
+  } catch {}
+  const phone = settings?.phone?.trim() || settings?.emergencyPhone?.trim() || "";
+  const phoneTel = phone.replace(/[^\d+]/g, "");
+
   const locationSchema = generateLocationSchema(locationSlug);
   const faqSchema = generateFAQSchema(page.faq);
   const breadcrumbSchema = generateBreadcrumbSchema([

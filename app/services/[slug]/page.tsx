@@ -58,6 +58,13 @@ export default async function ServicePage({
   const service = await resolveService(slug);
   if (!service) notFound();
 
+  let settings = null;
+  try {
+    settings = await getSiteSettings();
+  } catch {}
+  const phone = settings?.phone?.trim() || settings?.emergencyPhone?.trim() || "";
+  const phoneTel = phone.replace(/[^\d+]/g, "");
+
   const serviceSchema = generateServiceSchema(service);
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "/" },
