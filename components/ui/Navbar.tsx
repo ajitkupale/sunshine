@@ -13,7 +13,11 @@ const navLinks = [
   { href: "/contact", label: "Contact" },
 ];
 
-export default function Navbar() {
+export default function Navbar({ settings }: { settings?: any }) {
+  const phone = settings?.phone?.trim() || settings?.emergencyPhone?.trim() || "";
+  const emergencyPhone = settings?.emergencyPhone?.trim() || phone;
+  const phoneTel = phone.replace(/[^\d+]/g, "");
+  const emergencyTel = emergencyPhone.replace(/[^\d+]/g, "");
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -82,12 +86,12 @@ export default function Navbar() {
         {/* CTA + Mobile trigger */}
         <div className="flex items-center gap-2">
           <a
-            href="tel:[PLACEHOLDER_PHONE]"
+            href={phoneTel ? `tel:${phoneTel}` : "tel:"}
             className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer border border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-teal-50"
             aria-label="Call us"
           >
             <Phone className="w-4 h-4" aria-hidden="true" />
-            <span>Call Now</span>
+            <span>{phone || "Call Now"}</span>
           </a>
           <Link
             href="/contact"
@@ -137,12 +141,12 @@ export default function Navbar() {
             ))}
             <li className="pt-2 border-t border-teal-50 mt-1">
               <a
-                href="tel:[PLACEHOLDER_PHONE]"
+                href={emergencyTel ? `tel:${emergencyTel}` : (phoneTel ? `tel:${phoneTel}` : "tel:")}
                 className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold cursor-pointer"
                 style={{ color: "var(--color-emergency)" }}
               >
                 <Phone className="w-4 h-4" aria-hidden="true" />
-                Emergency: Call Now
+                {emergencyPhone ? `Emergency: ${emergencyPhone}` : "Emergency: Call Now"}
               </a>
             </li>
           </ul>

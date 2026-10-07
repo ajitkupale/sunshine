@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Contact from "@/components/sections/Contact";
+import { getSiteSettings } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "Contact & Book Appointment | Sunshine Hospital, Rankala, Kolhapur",
@@ -7,6 +8,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://sunshinehospitalkolhapur.in/contact" },
 };
 
-export default function ContactPage() {
-  return <Contact />;
+export default async function ContactPage() {
+  let settings = null;
+  try {
+    settings = await getSiteSettings();
+  } catch {}
+  return <Contact settings={settings} />;
 }

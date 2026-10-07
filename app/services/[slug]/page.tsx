@@ -2,11 +2,28 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle, ArrowLeft, Phone } from "lucide-react";
-import { services } from "@/data/services";
+import { services as fallbackServices } from "@/data/services";
+import { getServices, getServiceBySlug, getSiteSettings } from "@/lib/api";
 import { generateServiceSchema, generateBreadcrumbSchema, generateFAQSchema } from "@/lib/schema";
 
+export const dynamicParams = true;
+
+async function resolveService(slug: string) {
+  try {
+    const s = await getServiceBySlug(slug);
+    if (s) return s;
+  } catch {}
+  return fallbackServices.find((s) => s.slug === slug) || null;
+}
+
 export async function generateStaticParams() {
-  return services.map((s) => ({ slug: s.slug }));
+  try {
+    const list = await getServices();
+    if (Array.isArray(list) && list.length > 0) {
+      return list.map((s) => ({ slug: s.slug }));
+    }
+  } catch {}
+  return fallbackServices.map((s) => ({ slug: s.slug }));
 }
 
 export async function generateMetadata({
@@ -15,11 +32,17 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const service = services.find((s) => s.slug === slug);
+  const service = await resolveService(slug);
+  let settings = null;
+  try {
+    settings = await getSiteSettings();
+  } catch {}
+  const phone = settings?.phone?.trim() || settings?.emergencyPhone?.trim() || "";
+  const phoneTel = phone.replace(/[^\d+]/g, "");
   if (!service) return {};
   return {
-    title: service.metaTitle,
-    description: service.metaDesc,
+    title: service.metaTitle || service.title,
+    description: service.metaDesc || service.shortDesc,
     alternates: {
       canonical: `https://sunshinehospitalkolhapur.in/services/${slug}`,
     },
@@ -32,21 +55,25 @@ export default async function ServicePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const service = services.find((s) => s.slug === slug);
+  const service = await resolveService(slug);
   if (!service) notFound();
 
-  const serviceSchema = generateServiceSchema(slug);
+  const serviceSchema = generateServiceSchema(service);
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "/" },
     { name: "Services", url: "/services" },
     { name: service.title, url: `/services/${slug}` },
   ]);
+  const symptoms = service.symptoms || [];
+  const treatments = service.treatments || [];
   const faqSchema = generateFAQSchema([
-    { question: `What is ${service.title}?`, answer: service.fullDesc },
-    {
-      question: `What are the symptoms that require ${service.title}?`,
-      answer: service.symptoms.join(", ") + ".",
-    },
+    { question: `What is ${service.title}?`, answer: service.fullDesc || service.shortDesc },
+    ...(symptoms.length > 0
+      ? [{
+          question: `What are the symptoms that require ${service.title}?`,
+          answer: symptoms.join(", ") + ".",
+        }]
+      : []),
   ]);
 
   return (
@@ -81,35 +108,39 @@ export default async function ServicePage({
           </h1>
           <div className="section-divider" />
           <p className="text-lg leading-relaxed mb-10" style={{ color: "var(--color-text-muted)", fontFamily: "Noto Sans, sans-serif" }}>
-            {service.fullDesc}
+            {service.fullDesc || service.shortDesc}
           </p>
 
           <div className="grid sm:grid-cols-2 gap-6 mb-10">
             {/* Symptoms */}
-            <div className="rounded-2xl p-6 border" style={{ background: "white", borderColor: "var(--color-border)" }}>
-              <h2 className="font-bold text-lg mb-4" style={{ fontFamily: "Figtree, sans-serif", color: "var(--color-text)" }}>Common Symptoms</h2>
-              <ul className="space-y-2.5" role="list">
-                {service.symptoms.map((s) => (
-                  <li key={s} className="flex items-center gap-2.5">
-                    <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: "var(--color-primary)" }} aria-hidden="true" />
-                    <span className="text-sm" style={{ color: "var(--color-text-muted)", fontFamily: "Noto Sans, sans-serif" }}>{s}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {symptoms.length > 0 && (
+              <div className="rounded-2xl p-6 border" style={{ background: "white", borderColor: "var(--color-border)" }}>
+                <h2 className="font-bold text-lg mb-4" style={{ fontFamily: "Figtree, sans-serif", color: "var(--color-text)" }}>Common Symptoms</h2>
+                <ul className="space-y-2.5" role="list">
+                  {symptoms.map((s: string) => (
+                    <li key={s} className="flex items-center gap-2.5">
+                      <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: "var(--color-primary)" }} aria-hidden="true" />
+                      <span className="text-sm" style={{ color: "var(--color-text-muted)", fontFamily: "Noto Sans, sans-serif" }}>{s}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Treatments */}
-            <div className="rounded-2xl p-6 border" style={{ background: "white", borderColor: "var(--color-border)" }}>
-              <h2 className="font-bold text-lg mb-4" style={{ fontFamily: "Figtree, sans-serif", color: "var(--color-text)" }}>Treatment Approach</h2>
-              <ul className="space-y-2.5" role="list">
-                {service.treatments.map((t) => (
-                  <li key={t} className="flex items-center gap-2.5">
-                    <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: "var(--color-cta)" }} aria-hidden="true" />
-                    <span className="text-sm" style={{ color: "var(--color-text-muted)", fontFamily: "Noto Sans, sans-serif" }}>{t}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {treatments.length > 0 && (
+              <div className="rounded-2xl p-6 border" style={{ background: "white", borderColor: "var(--color-border)" }}>
+                <h2 className="font-bold text-lg mb-4" style={{ fontFamily: "Figtree, sans-serif", color: "var(--color-text)" }}>Treatment Approach</h2>
+                <ul className="space-y-2.5" role="list">
+                  {treatments.map((t: string) => (
+                    <li key={t} className="flex items-center gap-2.5">
+                      <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: "var(--color-cta)" }} aria-hidden="true" />
+                      <span className="text-sm" style={{ color: "var(--color-text-muted)", fontFamily: "Noto Sans, sans-serif" }}>{t}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* CTA */}
@@ -124,9 +155,9 @@ export default async function ServicePage({
               <Link href="/contact" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-white cursor-pointer transition-all duration-200 hover:-translate-y-0.5" style={{ background: "linear-gradient(135deg, var(--color-cta), #047857)", fontFamily: "Figtree, sans-serif" }}>
                 Book Appointment
               </Link>
-              <a href="tel:[PLACEHOLDER_PHONE]" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold cursor-pointer transition-all duration-200 border-2 hover:-translate-y-0.5" style={{ borderColor: "var(--color-primary)", color: "var(--color-primary)", fontFamily: "Figtree, sans-serif" }}>
+              <a href={phoneTel ? `tel:${phoneTel}` : "tel:"} className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold cursor-pointer transition-all duration-200 border-2 hover:-translate-y-0.5" style={{ borderColor: "var(--color-primary)", color: "var(--color-primary)", fontFamily: "Figtree, sans-serif" }}>
                 <Phone className="w-4 h-4" aria-hidden="true" />
-                Call Now
+                {phone ? `Call ${phone}` : "Call Now"}
               </a>
             </div>
           </div>

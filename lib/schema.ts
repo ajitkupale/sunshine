@@ -6,7 +6,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://sunshinehospitalko
 
 // ─── JSON-LD Schema Generators ───────────────────────────────────────────────
 
-export function generateMedicalBusinessSchema() {
+export function generateMedicalBusinessSchema(phone?: string) {
   return {
     "@context": "https://schema.org",
     "@type": "MedicalBusiness",
@@ -14,7 +14,7 @@ export function generateMedicalBusinessSchema() {
     description:
       "24/7 multi-specialty hospital in Rankala, Kolhapur offering internal medicine, diabetes, blood pressure, thyroid, gastric, and respiratory care.",
     url: BASE_URL,
-    telephone: "[PLACEHOLDER_PHONE]",
+    telephone: phone || "+91 7744xxxx88",
     openingHours: "Mo-Su 00:00-24:00",
     priceRange: "₹₹",
     aggregateRating: {
@@ -50,7 +50,7 @@ export function generateMedicalBusinessSchema() {
   };
 }
 
-export function generateDoctorSchema() {
+export function generateDoctorSchema(phone?: string) {
   return {
     "@context": "https://schema.org",
     "@type": "Physician",
@@ -58,7 +58,7 @@ export function generateDoctorSchema() {
     description:
       "Internal Medicine Specialist, General Practitioner, and Diabetologist with over 10 years of experience. Practises at Sunshine Multi-Speciality Center, Rankala, Kolhapur and also consults in Karad.",
     url: `${BASE_URL}/doctor`,
-    telephone: "[PLACEHOLDER_PHONE]",
+    telephone: phone || "+91 7744xxxx88",
     medicalSpecialty: [
       {
         "@type": "MedicalSpecialty",
@@ -95,14 +95,17 @@ export function generateDoctorSchema() {
   };
 }
 
-export function generateServiceSchema(slug: string) {
-  const service = services.find((s) => s.slug === slug);
+export function generateServiceSchema(serviceOrSlug: string | any) {
+  const service =
+    typeof serviceOrSlug === "string"
+      ? services.find((s) => s.slug === serviceOrSlug)
+      : serviceOrSlug;
   if (!service) return null;
   return {
     "@context": "https://schema.org",
     "@type": "MedicalService",
     name: service.title,
-    description: service.fullDesc,
+    description: service.fullDesc || service.shortDesc,
     provider: {
       "@type": "MedicalBusiness",
       name: "Sunshine Multi-Speciality Center",
@@ -115,7 +118,7 @@ export function generateServiceSchema(slug: string) {
   };
 }
 
-export function generateLocationSchema(slug: string) {
+export function generateLocationSchema(slug: string, phone?: string) {
   const page = locationPages.find((l) => l.slug === slug);
   if (!page) return null;
   return {
@@ -124,7 +127,7 @@ export function generateLocationSchema(slug: string) {
     name: `Sunshine Multi-Speciality Center — ${page.service} in ${page.city}`,
     description: page.intro,
     url: `${BASE_URL}/${page.slug}`,
-    telephone: "[PLACEHOLDER_PHONE]",
+    telephone: phone || "+91 7744xxxx88",
     address: {
       "@type": "PostalAddress",
       addressLocality: page.city,

@@ -6,8 +6,15 @@ import {
   Heart,
   Wind,
   AlertCircle,
+  Stethoscope,
+  Pill,
+  Syringe,
+  Brain,
+  Eye,
+  Bone,
 } from "lucide-react";
-import { services } from "@/data/services";
+import { services as fallbackServices } from "@/data/services";
+import { getServices } from "@/lib/api";
 
 const iconMap: Record<string, React.ElementType> = {
   Activity,
@@ -16,9 +23,25 @@ const iconMap: Record<string, React.ElementType> = {
   Heart,
   Wind,
   AlertCircle,
+  Stethoscope,
+  Pill,
+  Syringe,
+  Brain,
+  Eye,
+  Bone,
 };
 
-export default function Services() {
+export default async function Services() {
+  let services = fallbackServices;
+  try {
+    const data = await getServices();
+    if (Array.isArray(data) && data.length > 0) {
+      services = data.filter((s: any) => s.isPublished !== false);
+    }
+  } catch (error) {
+    console.warn("Could not fetch services from API, using fallback data:", error);
+  }
+
   return (
     <section
       id="services"

@@ -1,7 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { services } from "@/data/services";
-import { Activity, Shield, Zap, Heart, Wind, AlertCircle } from "lucide-react";
+import { services as fallbackServices } from "@/data/services";
+import { getServices } from "@/lib/api";
+import {
+  Activity,
+  Shield,
+  Zap,
+  Heart,
+  Wind,
+  AlertCircle,
+  Stethoscope,
+  Pill,
+  Syringe,
+  Brain,
+  Eye,
+  Bone,
+} from "lucide-react";
 import { generateMedicalBusinessSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
@@ -10,9 +24,32 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://sunshinehospitalkolhapur.in/services" },
 };
 
-const iconMap: Record<string, React.ElementType> = { Activity, Shield, Zap, Heart, Wind, AlertCircle };
+const iconMap: Record<string, React.ElementType> = {
+  Activity,
+  Shield,
+  Zap,
+  Heart,
+  Wind,
+  AlertCircle,
+  Stethoscope,
+  Pill,
+  Syringe,
+  Brain,
+  Eye,
+  Bone,
+};
 
-export default function ServicesPage() {
+export default async function ServicesPage() {
+  let services = fallbackServices;
+  try {
+    const data = await getServices();
+    if (Array.isArray(data) && data.length > 0) {
+      services = data.filter((s: any) => s.isPublished !== false);
+    }
+  } catch (error) {
+    console.warn("Could not fetch services from API, using fallback data:", error);
+  }
+
   const schema = generateMedicalBusinessSchema();
   return (
     <>

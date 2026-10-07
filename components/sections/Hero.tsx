@@ -18,7 +18,9 @@ const trustItems = [
   { icon: ShieldCheck, label: "Hygienic Facility" },
 ];
 
-export default function Hero() {
+export default function Hero({ settings }: { settings?: any }) {
+  const emergencyPhone = settings?.emergencyPhone?.trim() || settings?.phone?.trim() || "";
+  const emergencyTel = emergencyPhone.replace(/[^\d+]/g, "");
   const headingRef = useRef<HTMLHeadingElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -88,13 +90,13 @@ export default function Hero() {
                 Book Appointment
               </Link>
               <a
-                href="tel:[PLACEHOLDER_PHONE]"
+                href={emergencyTel ? `tel:${emergencyTel}` : "tel:"}
                 className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-base cursor-pointer transition-all duration-200 border-2 hover:-translate-y-0.5"
                 style={{ borderColor: "var(--color-emergency)", color: "var(--color-emergency)", background: "rgba(220,38,38,0.05)", fontFamily: "Figtree, sans-serif" }}
                 aria-label="Emergency call"
               >
                 <Phone className="w-4 h-4" aria-hidden="true" />
-                Emergency: Call Now
+                {emergencyPhone ? `Emergency: ${emergencyPhone}` : "Emergency: Call Now"}
               </a>
             </div>
           </div>

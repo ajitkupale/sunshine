@@ -1,3 +1,4 @@
+import { getSiteSettings } from "@/lib/api";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -19,6 +20,12 @@ export async function generateMetadata({
   params: Promise<{ locationSlug: string }>;
 }): Promise<Metadata> {
   const { locationSlug } = await params;
+  let settings = null;
+  try {
+    settings = await getSiteSettings();
+  } catch {}
+  const phone = settings?.phone?.trim() || settings?.emergencyPhone?.trim() || "";
+  const phoneTel = phone.replace(/[^\d+]/g, "");
   const page = locationPages.find((l) => l.slug === locationSlug);
   if (!page) return {};
   return {
@@ -151,7 +158,7 @@ export default async function LocationPage({
               <Link href="/contact" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-white cursor-pointer transition-all duration-200 hover:-translate-y-0.5" style={{ background: "linear-gradient(135deg, var(--color-cta), #047857)", fontFamily: "Figtree, sans-serif" }}>
                 Book Appointment
               </Link>
-              <a href="tel:[PLACEHOLDER_PHONE]" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold cursor-pointer transition-all duration-200 border-2 hover:-translate-y-0.5" style={{ borderColor: "var(--color-primary)", color: "var(--color-primary)", fontFamily: "Figtree, sans-serif" }}>
+              <a href={phoneTel ? `tel:${phoneTel}` : "tel:"} className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold cursor-pointer transition-all duration-200 border-2 hover:-translate-y-0.5" style={{ borderColor: "var(--color-primary)", color: "var(--color-primary)", fontFamily: "Figtree, sans-serif" }}>
                 <Phone className="w-4 h-4" aria-hidden="true" />
                 Call Now
               </a>

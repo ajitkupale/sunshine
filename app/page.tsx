@@ -1,3 +1,4 @@
+import { getSiteSettings } from "@/lib/api";
 import type { Metadata } from "next";
 import Hero from "@/components/sections/Hero";
 import Stats from "@/components/sections/Stats";
@@ -47,7 +48,11 @@ const homepageFAQ = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  let settings = null;
+  try {
+    settings = await getSiteSettings();
+  } catch {}
   const doctorSchema = generateDoctorSchema();
   const faqSchema = generateFAQSchema(homepageFAQ);
 
@@ -61,13 +66,13 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      <Hero />
+      <Hero settings={settings} />
       <Stats />
       <Services />
       <DoctorProfile />
       <Facilities />
       <Testimonials />
-      <Contact />
+      <Contact settings={settings} />
     </>
   );
 }

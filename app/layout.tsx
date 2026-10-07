@@ -63,12 +63,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+import { getSiteSettings } from "@/lib/api";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const schemaData = generateMedicalBusinessSchema();
+  let settings = null;
+  try {
+    settings = await getSiteSettings();
+  } catch {}
+  const phone = settings?.phone?.trim() || settings?.emergencyPhone?.trim() || "";
+  const schemaData = generateMedicalBusinessSchema(phone);
 
   return (
     <html lang="en">
@@ -92,11 +99,11 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
-        <Navbar />
+        <Navbar settings={settings} />
         <main id="main-content" tabIndex={-1} className="outline-none">
           {children}
         </main>
-        <Footer />
+        <Footer settings={settings} />
       </body>
     </html>
   );

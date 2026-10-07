@@ -19,7 +19,13 @@ const serviceLinks = [
   { href: "/services/emergency-care", label: "Emergency Care" },
 ];
 
-export default function Footer() {
+export default function Footer({ settings }: { settings?: any }) {
+  const phone = settings?.phone?.trim() || "";
+  const emergencyPhone = settings?.emergencyPhone?.trim() || phone;
+  const phoneTel = phone.replace(/[^\d+]/g, "");
+  const emergencyTel = emergencyPhone.replace(/[^\d+]/g, "");
+  const email = settings?.email?.trim() || "info@sunshinehospitalkolhapur.in";
+  const address = settings?.address;
   return (
     <footer
       className="pt-16 pb-8 mt-20"
@@ -112,11 +118,11 @@ export default function Footer() {
               <div className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-teal-400 flex-shrink-0" aria-hidden="true" />
                 <a
-                  href="tel:[PLACEHOLDER_PHONE]"
+                  href={phoneTel ? `tel:${phoneTel}` : "tel:"}
                   className="text-sm text-teal-200 hover:text-white transition-colors duration-200 cursor-pointer"
                   style={{ fontFamily: "Noto Sans, sans-serif" }}
                 >
-                  [PLACEHOLDER_PHONE]
+                  {phone || "Contact Us"}
                 </a>
               </div>
               <div className="flex items-center gap-2.5">
@@ -141,12 +147,12 @@ export default function Footer() {
             <div className="mt-5 rounded-xl bg-red-900/30 border border-red-500/30 p-3">
               <p className="text-xs font-semibold text-red-300 mb-1 uppercase tracking-wide">Emergency</p>
               <a
-                href="tel:[PLACEHOLDER_PHONE]"
+                href={emergencyTel ? `tel:${emergencyTel}` : (phoneTel ? `tel:${phoneTel}` : "tel:")}
                 className="text-lg font-bold text-red-400 hover:text-red-300 transition-colors cursor-pointer"
                 style={{ fontFamily: "Figtree, sans-serif" }}
                 aria-label="Call emergency number"
               >
-                [PLACEHOLDER_PHONE]
+                {emergencyPhone || phone || "Contact Us"}
               </a>
             </div>
           </div>

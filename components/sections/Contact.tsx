@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { MapPin, Phone, Clock, Send, CheckCircle } from "lucide-react";
 
-export default function Contact() {
+export default function Contact({ settings }: { settings?: any }) {
+  const phone = settings?.phone?.trim() || settings?.emergencyPhone?.trim() || "";
+  const phoneTel = phone.replace(/[^\d+]/g, "");
+  const email = settings?.email?.trim() || "info@sunshinehospitalkolhapur.in";
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", email: "", message: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -181,8 +184,8 @@ export default function Contact() {
               <div className="rounded-2xl p-5 border" style={{ background: "white", borderColor: "var(--color-border)" }}>
                 <Phone className="w-5 h-5 mb-3" style={{ color: "var(--color-primary)" }} aria-hidden="true" />
                 <h3 className="font-bold text-sm mb-1" style={{ fontFamily: "Figtree, sans-serif", color: "var(--color-text)" }}>Contact</h3>
-                <a href="tel:[PLACEHOLDER_PHONE]" className="text-xs font-semibold cursor-pointer block" style={{ color: "var(--color-primary)", fontFamily: "Noto Sans, sans-serif" }}>
-                  [PLACEHOLDER_PHONE]
+                <a href={phoneTel ? `tel:${phoneTel}` : "tel:"} className="text-xs font-semibold cursor-pointer block" style={{ color: "var(--color-primary)", fontFamily: "Noto Sans, sans-serif" }}>
+                  {phone || "Call Us"}
                 </a>
                 <a href="mailto:info@sunshinehospitalkolhapur.in" className="text-xs cursor-pointer block mt-1" style={{ color: "var(--color-text-muted)", fontFamily: "Noto Sans, sans-serif" }}>
                   info@sunshinehospitalkolhapur.in

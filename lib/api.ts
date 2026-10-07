@@ -2,22 +2,26 @@
  * Central API fetch utility for Next.js ISR pages.
  * All data fetching goes through this file — replaces static data/ imports.
  *
- * Revalidation: 1 hour by default. CMS triggers on-demand revalidation
- * via POST /api/revalidate after any content change.
+ * Revalidation: 0 / no-store in development so CMS edits reflect immediately.
+ * In production: 60s default ISR.
  */
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
-const DEFAULT_REVALIDATE = 3600; // 1 hour
+const DEFAULT_REVALIDATE = process.env.NODE_ENV === "development" ? 0 : 60;
 
 async function apiFetch<T>(
   endpoint: string,
   revalidate: number = DEFAULT_REVALIDATE
 ): Promise<T> {
-  const res = await fetch(`${API_URL}/api${endpoint}`, {
-    next: { revalidate, tags: [endpoint.split("/")[1]] },
-  });
+  const isDev = process.env.NODE_ENV === "development";
+  const fetchOptions: RequestInit =
+    isDev || revalidate === 0
+      ? { cache: "no-store" }
+      : { next: { revalidate, tags: [endpoint.split("/")[1]] } };
+
+  const res = await fetch(`${API_URL}/api${endpoint}`, fetchOptions);
 
   if (!res.ok) {
     throw new Error(
@@ -29,7 +33,7 @@ async function apiFetch<T>(
   return json.data as T;
 }
 
-// ── Typed API calls ────────────────────────────────────────────────────────────
+// ── Typed API calls ──────────────────────────────────────────────────────────
 
 export async function getServices() {
   return apiFetch<any[]>("/services");
